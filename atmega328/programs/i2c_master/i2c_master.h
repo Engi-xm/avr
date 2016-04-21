@@ -1,3 +1,8 @@
+/* Interrupt based I2C library. Use outer functions to use I2C bus.
+Function initi2c initializes bus (use with interrupts off)
+Function i2c_send sends data bytes to slave
+Function i2c_read reads data bytes from slave to global array i2c_rx_buffer */
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -31,4 +36,4 @@ void i2c_read(uint8_t slave_addr, uint8_t addr, uint8_t i); // read i bytes from
 #endif
 
 // global scope variables
-extern volatile uint8_t rx_buffer[2]; // receive data buffer
+extern volatile uint8_t i2c_rx_buffer[2]; // receive data buffer

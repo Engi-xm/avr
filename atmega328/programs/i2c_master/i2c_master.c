@@ -16,12 +16,12 @@ typedef struct buf {
 } buffer_struct;
 
 // global scope variables
-volatile uint8_t rx_buffer[2]; // receive data buffer
+volatile uint8_t i2c_rx_buffer[1]; // receive data buffer
 
 // private variables
 static volatile uint8_t tx_mode = 1; // selection between tx and rx modes
 static volatile uint8_t is_busy = 0; // status variable
-static volatile uint8_t tx_buffer[2]; // transmit data buffer
+static volatile uint8_t tx_buffer[1]; // transmit data buffer
 static volatile buffer_struct rx; // receive buffer
 static volatile buffer_struct tx; // transmit buffer
 
@@ -53,8 +53,7 @@ ISR(TWI_vect) {
 			}
 			break;
 		case I2C_MR_DATA_ACK:
-			rx.buffer_length--; // decrement to previous byte
-			rx_buffer[rx.buffer_length] = TWDR; // read data
+			i2c_rx_buffer[--rx.buffer_length] = TWDR; // read data
 			if(rx.buffer_length > 1) { // if more than one byte needs to be read
 				i2c_read_byte_ack(); // read byte with ack
 			} else {
@@ -62,7 +61,7 @@ ISR(TWI_vect) {
 			}
 			break;
 		case I2C_MR_DATA_NACK:
-			rx_buffer[0] = TWDR; // read data
+			i2c_rx_buffer[0] = TWDR; // read data
 			i2c_stop(); // send stop signal
 			break;
 		default:
@@ -124,7 +123,7 @@ void i2c_read(uint8_t slave_addr, uint8_t addr, uint8_t i) {
 	// rx.addr_buffer = addr; // load address to buffer (for book keeping)
 	rx.buffer_length = i; // set number of bytes to receive
 	for(uint8_t x = 0; x < i; x++) {
-		rx_buffer[x] = 0; // clear receive buffer
+		i2c_rx_buffer[x] = 0; // clear receive buffer
 	}
 	i2c_start(); // start transmition
 }
