@@ -28,12 +28,12 @@ volatile uint8_t usart_tx_buffer_length;
 ISR(USART_RX_vect) { // rx complete interrupt
 	static uint8_t i = 0; // static increment variable
 	usart_rx_buffer[i++] = usart_read_byte(); // read byte to global buffer
-	// if (usart_rx_buffer[i] == 'a') { // if read return char
-	// 	usart_rx_buffer[i] = '\0'; // close buffer
-	// 	i = 0; // reset increment
-	// 	usart_stop_rx(); // stop rx
-	// }
-	if (i > usart_rx_buffer_length) { // if reached max length
+	if (usart_rx_buffer[i-1] == '\r') { // if read return char
+		usart_rx_buffer[i-1] = '\0'; // close buffer
+		i = 0; // reset increment
+		usart_stop_rx(); // stop rx
+	}
+	if (i >= usart_rx_buffer_length) { // if reached max length
 		i = 0; // reset increment
 		usart_stop_rx(); // stop rx
 	}
@@ -54,11 +54,14 @@ int main(void) {
 	DDRB |= 0xff; 
 	init_usart();
 	sei();
+	uint8_t symb[1] = {0x61};
 	
 	// loop
 	while(1) {
 		usart_read(10);
 		while(usart_rx_busy);
+		// usart_send(symb, 1);
+		// _delay_ms(500);
 	}
 
 	return 0;
@@ -112,5 +115,8 @@ void usart_read(uint8_t max_length) {
 	while(usart_rx_busy); // wait for available
 	usart_rx_busy = 1; // set to busy
 	usart_rx_buffer_length = max_length; // set max length
+	// for(uint8_t x = 0; x < max_length; x++) {
+	// 	usart_rx_buffer[x] = 0; // clear receive buffer
+	// }
 	UCSR0B |= ((1 << RXEN0) | (1 << RXCIE0)); // turn on rx and interrupt
 }
