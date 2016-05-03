@@ -17,24 +17,23 @@ void usart_stop_rx(void); // stop receiver
 #define ARRAY_LENGTH(array) (sizeof(array)/sizeof((array)[0])) // array length macro
 
 // global scope variables
-volatile uint8_t usart_rx_buffer[1]; // rx buffer
-volatile uint8_t usart_tx_buffer[1]; // tx buffer
-volatile uint8_t usart_rx_complete = 1; // rx complete flag
-volatile uint8_t tx_busy = 0; // tx busy flag
-volatile uint8_t rx_busy = 0; // rx busy flag
+volatile uint8_t usart_rx_buffer[10]; // rx buffer
+volatile uint8_t usart_tx_buffer[10]; // tx buffer
+volatile uint8_t usart_tx_busy = 0; // tx busy flag
+volatile uint8_t usart_rx_busy = 0; // rx busy flag
 volatile uint8_t usart_rx_buffer_length;
 volatile uint8_t usart_tx_buffer_length;
 
 // interrupt handlers
 ISR(USART_RX_vect) { // rx complete interrupt
 	static uint8_t i = 0; // static increment variable
-	if ((i < usart_rx_buffer_length) && (!usart_rx_complete)) { // if havent reached end
-		usart_rx_buffer[i++] = usart_read_byte(); // read byte to global buffer
-		if (usart_rx_buffer[i] == '\r') { // if read return char
-			usart_rx_buffer[i] = '\0'; // close buffer
-			usart_rx_complete = 1; // set return
-		}
-	} else {
+	usart_rx_buffer[i++] = usart_read_byte(); // read byte to global buffer
+	// if (usart_rx_buffer[i] == 'a') { // if read return char
+	// 	usart_rx_buffer[i] = '\0'; // close buffer
+	// 	i = 0; // reset increment
+	// 	usart_stop_rx(); // stop rx
+	// }
+	if (i > usart_rx_buffer_length) { // if reached max length
 		i = 0; // reset increment
 		usart_stop_rx(); // stop rx
 	}
@@ -53,17 +52,13 @@ ISR(USART_UDRE_vect) { // UDR empty interrupt
 int main(void) {
 	// setup
 	DDRB |= 0xff; 
-	uint8_t send_data[2] = {0x61, 0x62}; // send a, b
 	init_usart();
 	sei();
 	
 	// loop
 	while(1) {
-		// usart_read(50);
-		// while(rx_busy);
-		usart_send(send_data, 1);
-		while(tx_busy);
-		_delay_ms(500);
+		usart_read(10);
+		while(usart_rx_busy);
 	}
 
 	return 0;
@@ -86,13 +81,13 @@ void init_usart(void) {
 void usart_stop_tx(void) {
 	UCSR0B &= ~(1 << UDRIE0); // turn off interrupt
 	UCSR0B &= ~(1 << TXEN0); // turn off tx
-	tx_busy = 0; // set to available
+	usart_tx_busy = 0; // set to available
 }
 
 void usart_stop_rx(void) {
 	UCSR0B &= ~(1 << RXCIE0); // turn off interrupt
 	UCSR0B &= ~(1 << RXEN0); // turn off rx
-	rx_busy = 0; // set to available
+	usart_rx_busy = 0; // set to available
 }
 
 void usart_send_byte(uint8_t data) {
@@ -104,21 +99,18 @@ uint8_t usart_read_byte(void) {
 }
 
 void usart_send(uint8_t *data, uint8_t i) {
-	while(tx_busy); // wait for available
-	tx_busy = 1; // set to busy
+	while(usart_tx_busy); // wait for available
+	usart_tx_busy = 1; // set to busy
 	usart_tx_buffer_length = i; // set length
 	for (uint8_t x = 0; x < usart_tx_buffer_length; x++) { // load data to buffer
 		usart_tx_buffer[x] = data[x];
 	}
-	UCSR0B |= (1 << TXEN0); // turn on tx
-	UCSR0B |= (1 << UDRIE0); // turn on interrupt
+	UCSR0B |= ((1 << TXEN0) | (1 << UDRIE0)); // turn on tx and interrupt
 }
 
 void usart_read(uint8_t max_length) {
-	while(rx_busy); // wait for available
-	rx_busy = 1; // set to busy
+	while(usart_rx_busy); // wait for available
+	usart_rx_busy = 1; // set to busy
 	usart_rx_buffer_length = max_length; // set max length
-	usart_rx_complete = 0; // set flag
-	UCSR0B |= (1 << RXEN0); // turn on rx
-	UCSR0B |= (1 << RXCIE0); // turn on interrupt
+	UCSR0B |= ((1 << RXEN0) | (1 << RXCIE0)); // turn on rx and interrupt
 }
