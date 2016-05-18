@@ -3,7 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/setbaud.h>
-#include "usart.h"
+#include "usart_mod.h"
 
 #define BUTTON0 0x01
 #define BUTTON1 0x02

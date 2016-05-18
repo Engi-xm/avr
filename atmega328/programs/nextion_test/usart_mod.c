@@ -19,9 +19,11 @@ static volatile uint8_t usart_tx_buffer_length; // tx buffer length
 
 // interrupt handlers
 ISR(USART_RX_vect) { // rx complete interrupt
+	// TODO: set end character
 	static uint8_t i = 0; // static increment variable
 	usart_rx_buffer[i] = usart_read_byte(); // read byte to global buffer
 	if (++i >= usart_rx_buffer_length) { // if reached max length
+		usart_rx_buffer[i] = '\0'; // close buffer
 		i = 0; // reset increment
 		usart_stop_rx(); // stop rx
 	}
@@ -55,6 +57,7 @@ void usart_send(uint8_t *data, uint8_t i) {
 	for (uint8_t x = 0; x < usart_tx_buffer_length; x++) { // load data to buffer
 		usart_tx_buffer[x] = data[x];
 	}
+	usart_tx_buffer[usart_tx_buffer_length] = '\0'; // close buffer
 	UCSR0B |= ((1 << TXEN0) | (1 << UDRIE0)); // turn on tx and interrupt
 }
 
