@@ -6,8 +6,6 @@
 
 static inline void init_int0(void);
 
-#define ARRAY_LENGTH(array) (sizeof(array)/sizeof((array)[0])) // array length macro
-
 #define SLAVE_ADDR 0b1101000
 #define REG_ADDR_1 0x0e
 #define REG_ADDR_2 0x00
@@ -18,21 +16,22 @@ ISR(INT0_vect) {
 
 int main() {
 	// setup
-	// clock_prescale_set(clock_div_1);
 	DDRB |= 0xff;
 	uint8_t send_data[2];
+	uint8_t* p_read_data;
 	init_i2c(50000);
 	// init_int0();
 	sei(); // FUCKING INTERRUPTS
-	send_data[0] = 0b00000000; // TURN THE FUCKING CRYSTAL ON (bit7 == 0)
-	i2c_send(SLAVE_ADDR, REG_ADDR_1, send_data, 1);
+	send_data[0] = 0b01000110; // TURN THE FUCKING CRYSTAL ON (bit7 == 0)
+	send_data[1] = 0x08;
+	i2c_send(SLAVE_ADDR, REG_ADDR_1, send_data);
 
 	// loop
 	while(1) {
-		i2c_read(SLAVE_ADDR, REG_ADDR_2, 1);
-		_delay_ms(50);
-		PORTB = (rx_buffer[0] >> 4) * 10 + (rx_buffer[0] & 0x0f);
-		_delay_ms(200);
+		p_read_data = i2c_read(SLAVE_ADDR, REG_ADDR_2, 1);
+		while(i2c_busy);
+		PORTB = (*p_read_data >> 4) * 10 + (*p_read_data & 0x0f);
+		_delay_ms(300);
 	}
 		return 0;
 }

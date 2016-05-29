@@ -8,8 +8,8 @@ Function i2c_read reads data bytes from slave to global array i2c_rx_buffer */
 
 // outer functions prototypes
 void init_i2c(uint16_t freq); // initialize i2c bus
-void i2c_send(uint8_t slave_addr, uint8_t addr, uint8_t *data, uint8_t i); // send i data bytes to slave
-void i2c_read(uint8_t slave_addr, uint8_t addr, uint8_t i); // read i bytes from slave
+void i2c_send(uint8_t slave_addr, uint8_t addr, uint8_t *data); // send data to slave until NULL char is reached
+uint8_t* i2c_read(uint8_t slave_addr, uint8_t addr, uint8_t i); // read i bytes from slave
 
 // status codes
 #define I2C_START_SENT     0x08 // start signal sent
@@ -25,15 +25,10 @@ void i2c_read(uint8_t slave_addr, uint8_t addr, uint8_t i); // read i bytes from
 #define I2C_STATUS (TWSR & 0xf8) // status of i2c
 
 // other defines
-#ifndef I2C_FREQ
-	#define I2C_FREQ 50000 // default to 50kHz
-#endif
-#ifndef I2C_FREQ_MAX
-	#define I2C_FREQ_MAX 100000 // set max freq to 100kHz
-#endif
-#ifndef I2C_FREQ_MIN
-	#define I2C_FREQ_MIN 20000 // set min to 20kHz
-#endif
+#define I2C_FREQ_DEFAULT 50000 // default to 50kHz
+#define I2C_RX_BUFFER_LENGTH 2 // set default buffer length
+#define I2C_FREQ_MAX 100000 // set max freq to 100kHz
+#define I2C_FREQ_MIN 20000 // set min to 20kHz
+#define I2C_DELIMTER 0x08 // set delimiter
 
-// global scope variables
-extern volatile uint8_t i2c_rx_buffer[2]; // receive data buffer
+extern volatile uint8_t i2c_busy; // global flag to check status

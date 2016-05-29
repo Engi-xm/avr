@@ -19,7 +19,6 @@ static volatile uint8_t usart_tx_buffer_length; // tx buffer length
 
 // interrupt handlers
 ISR(USART_RX_vect) { // rx complete interrupt
-	// TODO: set end character
 	static uint8_t i = 0; // static increment variable
 	usart_rx_buffer[i] = usart_read_byte(); // read byte to global buffer
 	if (++i >= usart_rx_buffer_length) { // if reached max length

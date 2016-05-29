@@ -4,37 +4,54 @@
 #include <avr/interrupt.h>
 #include <util/setbaud.h>
 #include "usart_mod.h"
+#include "dht11.h"
 
 #define BUTTON0 0x01
 #define BUTTON1 0x02
+#define DHT_TIM '1'
+#define DHT_PORT 'D'
+#define DHT_PIN 7
+
+static void init_tim1(void);
+static uint8_t *itoa(uint8_t number);
 
 int main(void) {
 	// setup
-	uint8_t data[7];
 	DDRB = 0xff;
 	init_usart();
+	init_tim1();
+	// uint8_t temp, hmdty;
+	uint8_t data1[2] = "11";
+	uint8_t data2[2] = "55";
+	uint8_t prefix1[] = "n0.val=";
+	uint8_t prefix2[] = "j0.val=70";
+	uint8_t suffix[3] = {0xff, 0xff, 0xff};
+	uint8_t ref[5] = "ref 0";
+	uint8_t *p;
+	p = itoa(5);
 	sei();
+	_delay_ms(1500);
 
 	// loop
 	while(1) {
-		usart_read(7);
-		while(usart_rx_busy);
-		for(uint8_t x = 0; x < 7; x++) {
-			data[x] = usart_rx_buffer[x];
-		}
-		switch(data[2]) {
-			case BUTTON1 :
-				PORTB ^= (1 << 1);
-				break;
-			case BUTTON0 :
-				PORTB ^= (1 << 0);
-				break;
-			default :
-				PORTB = 0xf0;
-				break;
-		}
-		_delay_ms(200);
+		// readDHT11(&temp, &hmdty);
+		usart_send(p, 2);
+		_delay_ms(1000);
 	}
 
 	return 0;
+}
+
+static void init_tim1(void) {
+	TCCR1B = (1 << CS10); // /1 prescaler
+}
+
+static uint8_t *itoa(uint8_t number) {
+	static uint8_t buf[3];
+	uint8_t *p = buf + 2; // point to ending
+	while(number != 0) {
+		*--p = '0' + (number % 10); // increment backwards
+		number /= 10;
+	}
+	return p;
 }

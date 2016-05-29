@@ -1,6 +1,6 @@
 #include "dht11.h"
 
-void read_dht11(uint8_t* temp, uint8_t* hmdty) {
+void readDHT11(uint8_t* temp, uint8_t* hmdty) {
 	// initialization
 	uint8_t data[5];
 	uint8_t arrayIndex = 0;

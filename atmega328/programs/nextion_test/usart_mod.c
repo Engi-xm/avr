@@ -1,5 +1,5 @@
 // include header
-#include "usart.h"
+#include "usart_mod.h"
 
 // inner function prototypes
 static void usart_send_byte(uint8_t data); // send single byte
