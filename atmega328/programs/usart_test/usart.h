@@ -11,13 +11,12 @@ Library provides gloval flag for waiting for a message*/
 
 // outer function prototypes
 void init_usart(void); // initialize usart
-void usart_send(uint8_t* data, uint8_t i); // send message
+void usart_send(uint8_t* data); // send message
 uint8_t* usart_read(uint8_t max_length); // read message
 
 // defines
-#ifndef USART_RX_BUF_LENGTH
-	#define USART_RX_BUF_LENGTH 10 // default to 10 bytes
-#endif
+#define USART_RX_BUF_LENGTH 10 // default to 10 bytes
+#define USART_DELIMITER '\0'
 
 // global scope variables
 extern volatile uint8_t usart_rx_busy; // rx busy flag

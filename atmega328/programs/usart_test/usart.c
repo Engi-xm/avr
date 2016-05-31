@@ -19,16 +19,16 @@ static volatile uint8_t* p_rx_data; // pointer to rx data
 
 // interrupt handlers
 ISR(USART_RX_vect) { // rx complete interrupt
-	// TODO: set end character
 	static uint8_t i = 0; // static increment variable
 	*(p_rx_data + i) = usart_read_byte(); // read byte to buffer
 	if (++i >= rx_word_len) { // if reached max length
+		*(p_rx_data + i) = '\0'; // close buffer
 		i = 0; // reset increment
 		usart_stop_rx(); // stop rx
 	}
 }
 ISR(USART_UDRE_vect) { // UDR empty interrupt
-	if (*(p_tx_data) == '\0') { // if reached end of tx buffer
+	if (*(p_tx_data) == USART_DELIMITER) { // if reached end of tx buffer
 		usart_stop_tx(); // stop tx
 	}
 	usart_send_byte(*(p_tx_data++)); // send byte and increment
@@ -57,8 +57,8 @@ uint8_t* usart_read(uint8_t max_length) {
 	while(usart_rx_busy); // wait for available
 	usart_rx_busy = 1; // set to busy
 	p_rx_data = rx_buffer; // set pointer to buffer
-	if (max_length > USART_RX_BUF_LENGTH) { // if word longer than buffer
-		max_length = USART_RX_BUF_LENGTH; // set it to buffer length
+	if (max_length > USART_RX_BUF_LENGTH - 1) { // if word longer than buffer
+		max_length = USART_RX_BUF_LENGTH - 1; // set it to buffer length
 	}
 	rx_word_len = max_length; // set max length
 	UCSR0B |= ((1 << RXEN0) | (1 << RXCIE0)); // turn on rx and interrupt
